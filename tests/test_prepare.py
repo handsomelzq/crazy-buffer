@@ -62,7 +62,7 @@ def test_rejects_invalid_input_with_locatable_issue(metric_points, case, code):
     json.dumps(error.value.issues, allow_nan=False)
 
 
-@pytest.mark.parametrize("crs", ["EPSG:2263", "EPSG:4326", "EPSG:3857"])
+@pytest.mark.parametrize("crs", ["EPSG:2263", "EPSG:4326", "EPSG:3857", "EPSG:900913", "ESRI:102113"])
 def test_rejects_analysis_crs_without_suitable_meter_axes(metric_points, crs):
     from crazy_buffer import prepare_layer, SpatialInputError
 

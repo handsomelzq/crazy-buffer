@@ -49,7 +49,19 @@ def _metric_crs(crs):
             _issue("invalid_analysis_crs", str(exc), field="analysis_crs", crs=str(crs))
         ]) from exc
     axes = parsed.axis_info
-    if (not parsed.is_projected or parsed.to_epsg() == 3857 or len(axes) < 2
+    operation = parsed.coordinate_operation
+    method_code = operation.method_code if operation is not None else None
+    spherical_mercator = (
+        method_code in ("9804", "9805", "9841")
+        and parsed.ellipsoid.semi_major_metre == 6378137
+        and parsed.ellipsoid.semi_minor_metre == 6378137
+    )
+    web_mercator = (
+        parsed.equals(CRS.from_epsg(3857), ignore_axis_order=True)
+        or method_code == "1024"
+        or spherical_mercator
+    )
+    if (not parsed.is_projected or web_mercator or len(axes) < 2
             or any(axis.unit_name.lower() not in ("metre", "meter")
                    or axis.unit_conversion_factor != 1 for axis in axes[:2])):
         _raise_issues([_issue(

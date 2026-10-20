@@ -1,6 +1,6 @@
 # Crazy Buffer MVP Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 交付可导入、可组合的 Python 空间计算包，跑通缓冲邻域统计及最近直线距离，并提供质检、复现记录与小型案例。
 
@@ -10,7 +10,7 @@
 
 **Spec:** [2026-10-20-crazy-buffer-design.md](../specs/2026-10-20-crazy-buffer-design.md)
 
-**Status:** 用户于 2026-10-20 批准实施计划、项目隔离依赖安装和多 agent 执行。按任务实现、独立审查；只读评审可并行，依赖安装和共享代码实现串行。
+**Status:** 2026-10-20 实现完成。121 项测试、离线锁定测试、源码包与 wheel 构建均通过；两个示例已回读。最终独立整项目审查因账户用量限制未能启动，已由控制系统执行本地只读审查并记录证据。
 
 **Initial release:** 首轮成果标记为开发预览版；跨平台 CI 和 QGIS 对照没有实际执行前，不声称已达到跨平台稳定发行标准。
 
@@ -77,8 +77,8 @@
 - `prepare_layer(frame, *, id_column, analysis_crs, geometry_types, coordinate_system="declared_crs", on_invalid="error", report=None) -> GeoDataFrame`；`geometry_types` 为允许类型的 tuple；返回新对象。坐标和投影后结果都检查有限性。
 - 内部 `validate_layer(frame, *, id_column, geometry_types, require_metric=False) -> None`，供后续任务复用。
 
-- [ ] 写 `test_prepare.py`：无 CRS/重复 ID/混合 ID/英尺分析 CRS/空几何/非法几何/Z 坐标/无穷坐标都抛带 code 的异常；重复 index 不报业务 ID 重复；输入不变；显式 drop 必须带 report 且报告被排除 ID。
-- [ ] 写 `test_io.py`：临时 CSV 的 ID `001` 保留字符串，空 ID 报错；GPKG 指定图层读回；缺少图层和字段可定位；WGS84 点显式投影后满足米制且原始数据不变；声明 GCJ-02/BD-09 拒绝。
+- [x] 写 `test_prepare.py`：无 CRS/重复 ID/混合 ID/英尺分析 CRS/空几何/非法几何/Z 坐标/无穷坐标都抛带 code 的异常；重复 index 不报业务 ID 重复；输入不变；显式 drop 必须带 report 且报告被排除 ID。
+- [x] 写 `test_io.py`：临时 CSV 的 ID `001` 保留字符串，空 ID 报错；GPKG 指定图层读回；缺少图层和字段可定位；WGS84 点显式投影后满足米制且原始数据不变；声明 GCJ-02/BD-09 拒绝。
 
   该 CSV 测试的核心断言：
   ```python
@@ -86,10 +86,10 @@
   assert result.crs.to_epsg() == 4326
   assert (result.geometry.x.iloc[0], result.geometry.y.iloc[0]) == (116.4, 39.9)
   ```
-- [ ] 安装获准后运行 `uv run --locked pytest tests/test_prepare.py tests/test_io.py -q`，保存预期缺少实现的失败证据，再实现上述接口；不得把依赖失败当成测试证明。
-- [ ] 最小实现包装、读取、校验、prepare 和 RunReport；输入阶段记录字段/几何/CRS 问题，不自动纠错或联网。
-- [ ] 重跑上述测试，预期全部通过；确认 `uv run --locked python -c 'import crazy_buffer'` 成功。
-- [ ] 独立审查本任务 diff、测试证据与公开签名；修正问题后提交本地检查点（若已初始化 Git）。
+- [x] 安装获准后运行 `uv run --locked pytest tests/test_prepare.py tests/test_io.py -q`，保存预期缺少实现的失败证据，再实现上述接口；不得把依赖失败当成测试证明。
+- [x] 最小实现包装、读取、校验、prepare 和 RunReport；输入阶段记录字段/几何/CRS 问题，不自动纠错或联网。
+- [x] 重跑上述测试，预期全部通过；确认 `uv run --locked python -c 'import crazy_buffer'` 成功。
+- [x] 独立审查本任务 diff、测试证据与公开签名；修正问题后提交本地检查点（若已初始化 Git）。
 
 ## Task 2: 缓冲几何与精确邻域关系
 
@@ -101,18 +101,18 @@
 - `neighbors_within(sources, targets, *, source_id, target_id, radius_m, max_matches=1_000_000, report=None) -> DataFrame`；列为 `source_id,target_id,distance_m,radius_m`，空结果也保留列与正确 ID dtype。
 - 内部 `iter_neighbor_batches(...)` 每个起点批次产生关系表，供 Task 3 使用；单起点候选用目标索引筛选，再精确距离过滤。匹配上限为最终关系数量，在扩展累计结果前检查。
 
-- [ ] 写 `test_neighbors.py`：本地米制坐标加偏移 `(500000,4400000)`，起点 `(0,0)`，目标 `(3,4),(5,0),(5.001,0),(0,0)`，半径 5；恰好匹配前三个中的前两个及重合点，共 3 条，距离分别 5、5、0。
+- [x] 写 `test_neighbors.py`：本地米制坐标加偏移 `(500000,4400000)`，起点 `(0,0)`，目标 `(3,4),(5,0),(5.001,0),(0,0)`，半径 5；恰好匹配前三个中的前两个及重合点，共 3 条，距离分别 5、5、0。
 
   四个目标 ID 依次为 `a,b,c,d`，该测试断言：
   ```python
   assert set(links["target_id"]) == {"a", "b", "d"}
   assert sorted(links["distance_m"].tolist()) == [0.0, 5.0, 5.0]
   ```
-- [ ] 加入孔洞案例：外框 `[0,10]²`、洞 `[4,6]²`，点 `(5,5)` 到面距离 1；半径 1 包含、0.5 排除；面内点距离 0；MultiPolygon 两部分都参与。
-- [ ] 加入重复行 index、同址不同 ID、两个起点都匹配同一目标、空目标、错位 CRS、max_matches=2 时抛 `MATCH_LIMIT_EXCEEDED` 且不返回截断结果。
-- [ ] 写 `test_buffer.py`：同一半径下返回有效面及原 CRS/ID，面积在离散精度对应容差内接近 πr²；参数被记录，输入不变。统计边界不通过 buffer polygon containment 决定。
-- [ ] 运行 `uv run --locked pytest tests/test_buffer.py tests/test_neighbors.py -q`，确认测试先因缺少功能失败，再实现索引候选+精确距离与缓冲导出。
-- [ ] 重跑并通过；独立审查代码与测试证据，确认不存在全量距离矩阵后提交本地检查点。
+- [x] 加入孔洞案例：外框 `[0,10]²`、洞 `[4,6]²`，点 `(5,5)` 到面距离 1；半径 1 包含、0.5 排除；面内点距离 0；MultiPolygon 两部分都参与。
+- [x] 加入重复行 index、同址不同 ID、两个起点都匹配同一目标、空目标、错位 CRS、max_matches=2 时抛 `MATCH_LIMIT_EXCEEDED` 且不返回截断结果。
+- [x] 写 `test_buffer.py`：同一半径下返回有效面及原 CRS/ID，面积在离散精度对应容差内接近 πr²；参数被记录，输入不变。统计边界不通过 buffer polygon containment 决定。
+- [x] 运行 `uv run --locked pytest tests/test_buffer.py tests/test_neighbors.py -q`，确认测试先因缺少功能失败，再实现索引候选+精确距离与缓冲导出。
+- [x] 重跑并通过；独立审查代码与测试证据，确认不存在全量距离矩阵后提交本地检查点。
 
 ## Task 3: 属性聚合与 buffer_stats 完整案例
 
@@ -124,7 +124,7 @@
 - 输出 `source_id,radius_m,n_matches,n_valid_values,mean_value,status`。非空 links 内半径必须唯一；显式 radius_m 必须一致；空 links 要求传 radius_m；非空 links 含多个尺度时报错。保留 sources 全集及其顺序。
 - 关系表中重复 `(source_id,target_id)`、不存在的 ID、负/非有限距离、距离大于半径均报错；用户可删减关系，不能伪造重复记录制造统计偏差。
 
-- [ ] 写 `test_aggregate.py`：P1 有 4 个住房匹配，值 `[10000,20000,None,30000]`，预期 n_matches=4、n_valid_values=3、mean=20000、status=ok；P2 无匹配为 0/0/空/no_matches；P3 仅缺失值为 1/0/空/no_valid_values。
+- [x] 写 `test_aggregate.py`：P1 有 4 个住房匹配，值 `[10000,20000,None,30000]`，预期 n_matches=4、n_valid_values=3、mean=20000、status=ok；P2 无匹配为 0/0/空/no_matches；P3 仅缺失值为 1/0/空/no_valid_values。
 
   按 source_id 取行后的核心断言：
   ```python
@@ -133,11 +133,11 @@
   assert (p3.n_matches, p3.n_valid_values, p3.status) == (1, 0, "no_valid_values")
   assert pd.isna(p2.mean_value) and pd.isna(p3.mean_value)
   ```
-- [ ] 检查 null 允许排除；价格文本、bool、Infinity 报错而不是自动强转；值为 0 作为普通有效数值，价格是否应排除 0 由调用者筛选并说明。唯一 ID 不因同址而去重。
-- [ ] 检查空关系的半径、混合半径、重复关系、孤立 ID 和负距离；用户过滤有效关系后聚合结果按过滤后的记录正确更新。
-- [ ] 写 `test_buffer_stats.py`：便捷函数与独立 neighbors + summarize 完全对应；batch_size=1 与 256 结果一致；零目标返回完整 source 行及 no_matches；函数不改输入。
-- [ ] 运行 `uv run --locked pytest tests/test_aggregate.py tests/test_buffer_stats.py -q` 记录失败；实现关系验证与聚合，便捷函数调用同一批次匹配/统计核心，不物化全部起点的配对表。
-- [ ] 重跑上述测试与 Task 2 受影响测试，预期通过；独立审查后提交本地检查点。此时应已能在内存里跑通第一个研究案例。
+- [x] 检查 null 允许排除；价格文本、bool、Infinity 报错而不是自动强转；值为 0 作为普通有效数值，价格是否应排除 0 由调用者筛选并说明。唯一 ID 不因同址而去重。
+- [x] 检查空关系的半径、混合半径、重复关系、孤立 ID 和负距离；用户过滤有效关系后聚合结果按过滤后的记录正确更新。
+- [x] 写 `test_buffer_stats.py`：便捷函数与独立 neighbors + summarize 完全对应；batch_size=1 与 256 结果一致；零目标返回完整 source 行及 no_matches；函数不改输入。
+- [x] 运行 `uv run --locked pytest tests/test_aggregate.py tests/test_buffer_stats.py -q` 记录失败；实现关系验证与聚合，便捷函数调用同一批次匹配/统计核心，不物化全部起点的配对表。
+- [x] 重跑上述测试与 Task 2 受影响测试，预期通过；独立审查后提交本地检查点。此时应已能在内存里跑通第一个研究案例。
 
 ## Task 4: 最近直线距离
 
@@ -147,7 +147,7 @@
 - `nearest_distance(sources, targets, *, source_id, target_id, report=None) -> DataFrame`，两者均为 Point，使用共同米制投影；返回 `source_id,target_id,distance_m,tie_count,status`。
 - 有效源为空时返回固定 schema 空表；目标为空时报 `EMPTY_TARGETS`。使用索引最近查询获取所有精确等距项，再按 str(ID) 稳定选择；相等指当前几何引擎返回的双精度数值严格相等，数值断言容差不得偷偷变成并列判定容差。
 
-- [ ] 写测试：源 `(0,0)`，目标 A=`(-3,4)`、B=`(3,4)`，距离 5、tie_count=2、选 A；打乱目标顺序仍选 A。整数 ID `[2,10]` 并列时按明示字典序选 10；结果保留整数类型。
+- [x] 写测试：源 `(0,0)`，目标 A=`(-3,4)`、B=`(3,4)`，距离 5、tie_count=2、选 A；打乱目标顺序仍选 A。整数 ID `[2,10]` 并列时按明示字典序选 10；结果保留整数类型。
 
   第一个案例的断言：
   ```python
@@ -156,9 +156,9 @@
   assert result.loc[0, "tie_count"] == 2
   pd.testing.assert_frame_equal(result, reordered_result)
   ```
-- [ ] 加入重合点距离 0、空目标异常、非 Point 异常、空源 schema、不同 CRS、输入不变、重复行 index 案例。
-- [ ] 运行 `uv run --locked pytest tests/test_nearest.py -q`，确认先失败；实现索引查询与稳定并列规则，再运行通过。
-- [ ] 独立审查测试证据与单位/排序口径，提交本地检查点。
+- [x] 加入重合点距离 0、空目标异常、非 Point 异常、空源 schema、不同 CRS、输入不变、重复行 index 案例。
+- [x] 运行 `uv run --locked pytest tests/test_nearest.py -q`，确认先失败；实现索引查询与稳定并列规则，再运行通过。
+- [x] 独立审查测试证据与单位/排序口径，提交本地检查点。
 
 ## Task 5: 显式导出与可复现记录
 
@@ -170,8 +170,8 @@
 - `run_manifest.json` 包含 `schema_version=1,status="success",reproducibility="complete"|"partial",inputs,script,steps,metadata,versions,outputs`。complete 仅表示执行所需工件已声明并保存，不表示已自动复跑或已验证用户代码；未提供输入快照或脚本为 partial，并列出缺项。
 - 内存输入显式快照到 `inputs/<name>.gpkg`；文件输入显式复制到 inputs 下，哈希复制前后核对；script 复制到 artifacts。限制 name 为安全单段文件名，不能目录穿越；结果清单记录数据类型以解释 CSV ID。
 
-- [ ] 写 `test_export.py`：指标 CSV、可选 spatial GPKG、quality.json、必要 issues.csv、manifest、输入和脚本副本均能读回；文件哈希匹配，输出目录已存在时报错。
-- [ ] 注入 GPKG 写入或复制失败，断言最终目录不存在、临时产物被清理、原输入没修改；manifest 不包含自己的哈希。并发导出到同一路径必须有排他保护，不覆盖竞争者结果。
+- [x] 写 `test_export.py`：指标 CSV、可选 spatial GPKG、quality.json、必要 issues.csv、manifest、输入和脚本副本均能读回；文件哈希匹配，输出目录已存在时报错。
+- [x] 注入 GPKG 写入或复制失败，断言最终目录不存在、临时产物被清理、原输入没修改；manifest 不包含自己的哈希。并发导出到同一路径必须有排他保护，不覆盖竞争者结果。
 
   对写入故障注入的核心断言：
   ```python
@@ -180,9 +180,9 @@
   assert not output_dir.exists()
   assert list(output_dir.parent.iterdir()) == original_parent_entries
   ```
-- [ ] 写 `test_provenance.py`：无脚本/输入为 partial；外部过滤需用户脚本证明，不自动声称已捕获；记录 Python/包/GEOS/GDAL/PROJ 版本，未知版本明确为 unknown；没有 Git 时 git_commit 为 null。
-- [ ] 运行 `uv run --locked pytest tests/test_export.py tests/test_provenance.py -q` 先失败；实现同一文件系统临时目录写入、完整性验证、受保护发布和异常清理。
-- [ ] 重跑通过；独立审查失败路径、数据泄漏边界与证据，提交本地检查点。
+- [x] 写 `test_provenance.py`：无脚本/输入为 partial；外部过滤需用户脚本证明，不自动声称已捕获；记录 Python/包/GEOS/GDAL/PROJ 版本，未知版本明确为 unknown；没有 Git 时 git_commit 为 null。
+- [x] 运行 `uv run --locked pytest tests/test_export.py tests/test_provenance.py -q` 先失败；实现同一文件系统临时目录写入、完整性验证、受保护发布和异常清理。
+- [x] 重跑通过；独立审查失败路径、数据泄漏边界与证据，提交本地检查点。
 
 ## Task 6: 两个可运行案例、文档与发布前检查
 
@@ -193,7 +193,7 @@
 - 两份 Notebook 仅组织分析和解释，通过 JSON 写入（ensure_ascii=False, indent=1），没有执行输出；共享示例数据构建逻辑放在 `examples/scripts/sample_data.py`。
 - 所有样例均为合成数据。数据说明明确来源、单位、坐标语义、许可和预期答案，不包装为真实北京数据。
 
-- [ ] 先写 `test_examples.py`：两个脚本的小型案例可在临时目录执行、核心结果等于手算值、导出可回读；Notebook 仅做 nbformat 校验和 code cell AST（排除 magic 行），不运行完整 Notebook。
+- [x] 先写 `test_examples.py`：两个脚本的小型案例可在临时目录执行、核心结果等于手算值、导出可回读；Notebook 仅做 nbformat 校验和 code cell AST（排除 magic 行），不运行完整 Notebook。
 
   两份脚本采用 Task 3 的 P1 房价与 Task 4 的等距 A/B 作为首个对象，其回读断言：
   ```python
@@ -202,11 +202,11 @@
   assert nearest.loc[0, "distance_m"] == 5.0
   assert manifest["status"] == "success"
   ```
-- [ ] 实现脚本、Notebook、说明文档；README 以 Python API 示例开头，明确 CLI/GUI 未实现，解释输入准备和 report 是可选但完整复现需保存的材料。
-- [ ] 数据源目录迁入独立文档，并保留许可待核验状态；不得宣称下载器、真实房价或跨平台已验证。代码建议采用 MIT（用户审核本计划时一并确认），合成数据以明确独立许可发布，第三方数据不混入。
-- [ ] CI 使用 Windows/macOS/Linux 与 Python 3.12、uv lock 执行测试；只写工作流，GitHub 未运行时不得声称云端已通过。
-- [ ] 运行 `uv run --locked pytest -q`、`uv build`，以及产物安装到临时环境后的 import/合成小例冒烟。依赖已缓存时用离线模式验证计算不联网；没有缓存则如实记录限制。
-- [ ] 全项目独立审查：与批准设计逐项核对、回读示例导出、核对文档命令与签名；所有影响正确性的发现修复并复测，再提交本地检查点。
+- [x] 实现脚本、Notebook、说明文档；README 以 Python API 示例开头，明确 CLI/GUI 未实现，解释输入准备和 report 是可选但完整复现需保存的材料。
+- [x] 数据源目录迁入独立文档，并保留许可待核验状态；不得宣称下载器、真实房价或跨平台已验证。代码建议采用 MIT（用户审核本计划时一并确认），合成数据以明确独立许可发布，第三方数据不混入。
+- [x] CI 使用 Windows/macOS/Linux 与 Python 3.12、uv lock 执行测试；只写工作流，GitHub 未运行时不得声称云端已通过。
+- [x] 运行 `uv run --locked pytest -q`、`uv build`，以及产物安装到临时环境后的 import/合成小例冒烟。依赖已缓存时用离线模式验证计算不联网；没有缓存则如实记录限制。
+- [x] 全项目独立审查：与批准设计逐项核对、回读示例导出、核对文档命令与签名；所有影响正确性的发现修复并复测，再提交本地检查点。
 
 ## 执行与验收顺序
 
