@@ -1,0 +1,24 @@
+:root { --forest: #295b4c; --paper: #f6f7f3; --ink: #243f36; }
+.stApp { background: var(--paper); color: var(--ink); }
+.stApp, input, button, textarea { font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif; }
+.block-container { padding: 1.6rem 1.8rem 2rem; max-width: 1900px; }
+header[data-testid="stHeader"] { background: transparent; }
+[data-testid="stAppDeployButton"] { display: none; }
+.brand { display: flex; align-items: center; gap: 13px; padding: 6px 0 22px; font-size: 22px; font-weight: 650; letter-spacing: .12em; }
+.brand small { display: block; font-size: 10px; font-weight: 450; letter-spacing: .15em; color: #7b897f; margin-top: 5px; }
+.brand-mark { display: grid; place-items: center; width: 44px; height: 44px; background: #e4ebe2; color: #295b4c; border: 1px solid #becfbc; border-radius: 50%; font-size: 32px; font-weight: 400; }
+.panel-label { font-size: 11px; letter-spacing: .14em; color: #6d8176; border-top: 1px solid #d9e1d7; padding-top: 18px; margin: 6px 0 16px; font-weight: 600; }
+[data-testid="stVerticalBlockBorderWrapper"] { background: #fcfcf9; border-radius: 8px; }
+[data-testid="stExpander"] { background: transparent; }
+h3 { font-size: 1.25rem !important; font-weight: 600 !important; }
+[data-testid="stCaptionContainer"] { color: #68776d; line-height: 1.7; }
+[data-testid="stBaseButton-primary"] { background: #295b4c; border: 1px solid #295b4c; border-radius: 6px; min-height: 43px; }
+[data-testid="stBaseButton-primary"]:hover { background: #1e493c; border-color: #1e493c; }
+[data-testid="stBaseButton-secondary"], [data-testid="stDownloadButton"] button { border-color: #ced9ce; border-radius: 6px; color: #295b4c; }
+[data-testid="stFileUploaderDropzone"] { background: #edf1e9; padding: 12px; border: 1px dashed #bbcbbd; }
+[data-testid="stDeckGlJsonChart"] { border: 1px solid #cdd8cc; border-radius: 10px; overflow: hidden; background: #e8eee4; }
+[data-testid="stRadio"] label, [data-testid="stCheckbox"] label { font-size: 13px; }
+@media (max-width: 800px) {
+  .block-container { padding: 1rem; }
+  .brand { font-size: 17px; }
+}

@@ -123,6 +123,7 @@ dependencies = [
 [package.optional-dependencies]
 gui = [
     { name = "networkx" },
+    { name = "pydeck" },
     { name = "streamlit" },
 ]
 network = [
@@ -141,10 +142,11 @@ requires-dist = [
     { name = "networkx", marker = "extra == 'gui'", specifier = ">=3.4,<4" },
     { name = "networkx", marker = "extra == 'network'", specifier = ">=3.4,<4" },
     { name = "pandas", specifier = ">=2.2,<3" },
+    { name = "pydeck", marker = "extra == 'gui'", specifier = ">=0.9.1,<1" },
     { name = "pyogrio", specifier = ">=0.9,<1" },
     { name = "pyproj", specifier = ">=3.6,<4" },
     { name = "shapely", specifier = ">=2.0,<3" },
-    { name = "streamlit", marker = "extra == 'gui'", specifier = ">=1.40,<2" },
+    { name = "streamlit", marker = "extra == 'gui'", specifier = ">=1.66,<2" },
 ]
 provides-extras = ["network", "gui"]
 

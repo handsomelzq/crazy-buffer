@@ -20,7 +20,7 @@ crazy-buffer-gui = "crazy_buffer.gui.launcher:main"
 
 [project.optional-dependencies]
 network = ["networkx>=3.4,<4"]
-gui = ["networkx>=3.4,<4", "streamlit>=1.40,<2"]
+gui = ["networkx>=3.4,<4", "streamlit>=1.66,<2", "pydeck>=0.9.1,<1"]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "nbformat>=5,<6"]

@@ -14,8 +14,8 @@ def test_demo_run_and_invalidate(task):
     assert not app.exception
     assert not app.error
     assert 'frozen' in app.session_state
-    assert app.expander[0].label == '质检与运行记录'
-    assert app.expander[0].proto.expanded is False
+    quality = next(item for item in app.expander if item.label == '质检与运行记录')
+    assert quality.proto.expanded is False
     app.text_input[0].set_value('EPSG:3857').run()
     assert 'frozen' not in app.session_state
     app.button[0].click().run()
@@ -82,3 +82,35 @@ def test_statistic_id_overlap_explained():
     assert not app.exception
     assert '独立的数值字段' in app.error[0].value
     assert 'frozen' not in app.session_state
+
+
+def test_display_controls_do_not_invalidate_analysis():
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    app.button[0].click().run()
+    original = app.session_state['frozen']['csv']
+    for key in ['basemap', 'visible_sources', 'show_buffer']:
+        app.checkbox(key=key).uncheck().run()
+        assert not app.exception
+        assert app.session_state['frozen']['csv'] == original
+    app.number_input(key='radius_合成示例').set_value(100.).run()
+    assert 'frozen' not in app.session_state
+
+
+def test_uploaded_lon_lat_auto_projection_and_preview(monkeypatch):
+    import streamlit
+    class Upload:
+        name = 'sample.csv'
+        def getvalue(self):
+            return b'id,lon,lat,value\n001,116.4,39.9,10\n002,116.401,39.901,20\n'
+    monkeypatch.setattr(streamlit, 'file_uploader', lambda *args, **kwargs: Upload())
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    app.radio(key='mode').set_value('上传数据').run()
+    assert not app.exception
+    assert not app.error
+    assert app.selectbox(key='x_sources').value == 'lon'
+    assert app.selectbox(key='y_sources').value == 'lat'
+    projection = next(t for t in app.text_input if t.label == '计算投影（米制 CRS）')
+    assert projection.value == 'EPSG:32650'
+    app.button[0].click().run()
+    assert not app.error
+    assert app.session_state['frozen']['result']['mean_value'].tolist() == [15., 15.]
