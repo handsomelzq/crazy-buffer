@@ -15,6 +15,10 @@ dependencies = [
   "pandas>=2.2,<3",
 ]
 
+[project.optional-dependencies]
+network = ["networkx>=3.4,<4"]
+gui = ["networkx>=3.4,<4", "streamlit>=1.40,<2"]
+
 [dependency-groups]
 dev = ["pytest>=8,<10", "nbformat>=5,<6"]
 

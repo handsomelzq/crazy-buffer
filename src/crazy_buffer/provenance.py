@@ -24,7 +24,7 @@ def runtime_versions():
     import pyogrio
     import pyproj
     versions = {'python': platform.python_version()}
-    for package in ('crazy-buffer', 'pandas', 'geopandas', 'shapely', 'pyogrio', 'pyproj'):
+    for package in ('crazy-buffer', 'pandas', 'geopandas', 'shapely', 'pyogrio', 'pyproj', 'networkx', 'streamlit'):
         try:
             versions[package] = version(package)
         except PackageNotFoundError:

@@ -83,7 +83,7 @@ def read_geopackage(path, *, layer, id_column, coordinate_system="declared_crs",
             raise SpatialInputError("read_error", "GeoPackage layer could not be read.", [
                 _issue("read_error", str(exc), path=str(path), layer=str(layer))
             ]) from exc
-        validate_layer(result, id_column=id_column, geometry_types=("Point", "Polygon", "MultiPolygon"))
+        validate_layer(result, id_column=id_column, geometry_types=("Point", "LineString", "Polygon", "MultiPolygon"))
     except SpatialInputError as exc:
         _record_error(report, exc)
         raise

@@ -17,3 +17,6 @@ __all__ += ['nearest_distance']
 
 from .export import export_run
 __all__ += ['export_run']
+
+from .network import Network, build_network, nearest_network_distance
+__all__ += ['Network', 'build_network', 'nearest_network_distance']
