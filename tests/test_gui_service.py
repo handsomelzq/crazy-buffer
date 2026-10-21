@@ -140,3 +140,39 @@ def test_launcher_loopback_and_optional_imports(monkeypatch):
         'import sys; import crazy_buffer; import crazy_buffer.gui; '
         'assert "streamlit" not in sys.modules; assert "networkx" not in sys.modules'],
         check=True, capture_output=True, text=True, timeout=30)
+
+
+def test_nonspatial_gpkg_layers_rejected(tmp_path):
+    import pyogrio
+    path = tmp_path / 'mixed.gpkg'
+    pyogrio.write_dataframe(pd.DataFrame({'id': ['001']}), path, layer='attributes', driver='GPKG')
+    attributes_only = path.read_bytes()
+    with pytest.raises(ValueError, match='没有空间图层'):
+        svc.inspect_upload(attributes_only, 'gpkg')
+    with pytest.raises(ValueError, match='非空间属性表'):
+        svc.load_upload(attributes_only, kind='gpkg', role='sources', layer='attributes')
+    svc.demo_inputs()['sources'].to_file(path, layer='points')
+    data = path.read_bytes()
+    assert svc.inspect_upload(data, 'gpkg')['layers'] == ['points']
+    with pytest.raises(ValueError, match='非空间属性表'):
+        svc.load_upload(data, kind='gpkg', role='sources', layer='attributes')
+    assert isinstance(svc.load_upload(data, kind='gpkg', role='sources', layer='points'), gpd.GeoDataFrame)
+
+
+def test_gpkg_missing_crs_rejected(tmp_path):
+    path = tmp_path / 'no-crs.gpkg'
+    frame = svc.demo_inputs()['sources'].set_crs(None, allow_override=True)
+    with pytest.warns(UserWarning, match='crs'):
+        frame.to_file(path, layer='points')
+    with pytest.raises(ValueError, match='原始 CRS'):
+        svc.load_upload(path.read_bytes(), kind='gpkg', role='sources', layer='points')
+
+
+def test_statistic_field_cannot_overwrite_target_id():
+    inputs = svc.demo_inputs()
+    inputs['targets']['id'] = ['01', '1']
+    params = parameters('buffer')
+    params['value_column'] = 'id'
+    with pytest.raises(ValueError, match='独立的数值字段'):
+        svc.freeze_run(inputs, params)
+    assert inputs['targets']['id'].tolist() == ['01', '1']

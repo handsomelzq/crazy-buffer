@@ -44,6 +44,8 @@ else:
                 fingerprint_parts.extend([x, y, crs])
                 inputs[role] = load_upload(data, kind=kind, role=role, x=x, y=y, crs=crs)
         except Exception as exc:
+            inputs.pop(role, None)
+            st.session_state.pop('frozen', None)
             st.error(f'{labels[role]}读取失败：{exc}')
             ready = False
 params['analysis_crs'] = st.text_input('3. 分析 CRS（本地区域适用的投影米制 CRS）', value='EPSG:32650' if mode == '合成示例' else '', key=f'analysis_{mode}')
@@ -88,6 +90,8 @@ if 'frozen' in st.session_state:
     frozen = st.session_state['frozen']
     st.subheader('5. 结果与下载')
     st.dataframe(frozen['result'])
-    st.json({'质检问题': frozen['report'].issues, '步骤': frozen['report'].steps})
     st.download_button('下载结果 CSV', frozen['csv'], 'results.csv', 'text/csv')
     st.download_button('下载可复现 ZIP', frozen['zip'], 'crazy-buffer-run.zip', 'application/zip')
+    st.caption(f"质检记录：{len(frozen['report'].issues)} 条问题")
+    with st.expander('质检与运行记录', expanded=False):
+        st.json({'质检问题': frozen['report'].issues, '步骤': frozen['report'].steps})

@@ -37,7 +37,10 @@ def inspect_upload(data, kind):
     if kind == 'csv':
         return {'columns': pd.read_csv(BytesIO(data), nrows=0).columns.tolist()}
     with local_file(data) as path:
-        return {'layers': pyogrio.list_layers(path)[:, 0].tolist()}
+        layers = [name for name, geometry_type in pyogrio.list_layers(path) if geometry_type is not None]
+        if not layers:
+            raise ValueError('GPKG 中没有空间图层；属性表不能用于空间分析。')
+        return {'layers': layers}
 
 
 def load_upload(data, *, kind, role, layer=None, x=None, y=None, crs=None):
@@ -57,11 +60,17 @@ def load_upload(data, *, kind, role, layer=None, x=None, y=None, crs=None):
             if layer not in pyogrio.list_layers(path)[:, 0]:
                 raise ValueError('请明确选择有效的 GPKG 图层。')
             info = pyogrio.read_info(path, layer=layer)
+            if info['geometry_type'] is None:
+                raise ValueError('所选 GPKG 图层是非空间属性表，请选择具有几何和 CRS 的空间图层。')
             if info['features'] > limit:
                 raise ValueError(f'{role} 最多 {limit} 行。')
             frame = gpd.read_file(path, layer=layer, rows=limit + 1, engine='pyogrio')
     if len(frame) > limit:
         raise ValueError(f'{role} 最多 {limit} 行。')
+    if not isinstance(frame, gpd.GeoDataFrame) or frame.active_geometry_name is None:
+        raise ValueError('输入缺少可用的活动几何列。')
+    if frame.crs is None:
+        raise ValueError('输入缺少原始 CRS，请先为数据明确声明坐标参考系。')
     return frame
 
 
@@ -98,6 +107,8 @@ def decode_frame(snapshot):
 
 
 def run_analysis(inputs, params):
+    if params['task'] == 'buffer' and params['value_column'] == params['targets_id']:
+        raise ValueError('统计值字段不能与目标唯一 ID 字段相同；请选择独立的数值字段，避免数值转换改变业务 ID。')
     report = RunReport()
     prepared = {}
     roles = ('sources', 'targets', 'edges') if params['task'] == 'network' else ('sources', 'targets')
