@@ -15,6 +15,9 @@ dependencies = [
   "pandas>=2.2,<3",
 ]
 
+[project.scripts]
+crazy-buffer-gui = "crazy_buffer.gui.launcher:main"
+
 [project.optional-dependencies]
 network = ["networkx>=3.4,<4"]
 gui = ["networkx>=3.4,<4", "streamlit>=1.40,<2"]

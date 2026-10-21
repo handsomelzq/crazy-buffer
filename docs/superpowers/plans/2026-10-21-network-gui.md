@@ -34,6 +34,7 @@ Ownership: src/crazy_buffer/network.py（必要时可拆 network/ 包）, api.py
 Ownership: src/crazy_buffer/gui/（app.py, service.py, __init__.py, launcher.py 可合理划分）, tests/test_gui*.py, docs/gui.md, README.md, pyproject.toml 入口, .github/workflows/tests.yml。
 
 - Streamlit 本地浏览器 GUI，`crazy-buffer-gui` 启动入口，默认只监听 127.0.0.1，禁用使用统计。支持 `uv run --extra gui crazy-buffer-gui`；基础包 import 不依赖 streamlit/networkx。
+- 缓冲统计的源对象支持 Point/Polygon/MultiPolygon（包括公园 AOI）；最近距离两种任务的源对象为 Point。GUI 导出复用 export_run 清单与哈希规范，允许把输入另存为带 dtype/CRS 的严格 JSON+WKB 快照。
 - 中文标签，按步骤选择分析 → 使用合成示例/上传数据 → 字段与 CRS → 运行 → 查看与下载。三个任务：缓冲均值统计、直线最近点距离、估计路网步行距离。
 - 内置确定性合成示例，无外部下载。上传 CSV 点文件或 GPKG（明确选择图层），自动列出字段供选择；CSV 指定 x/y 和原始 CRS；GPKG 使用其原始 CRS。道路为 GPKG LineString，显式节点列可选，默认双向并解释拓扑规则。
 - 显式分析 CRS，默认 EPSG:32650 仅用于示例；北京示例文字不暗示全球通用。显示坐标偏移、道路拓扑、样本均值口径的必要提示。

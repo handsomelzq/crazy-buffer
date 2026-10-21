@@ -26,3 +26,5 @@
 导出时 results 必须是普通 DataFrame，spatial 另传 GeoDataFrame。input_files 按安全名称复制文件；input_frames 按名称保存 `inputs/name.gpkg`，所有 GeoPackage 图层名为 `data`；script_path 复制到 `artifacts/script.py`（后缀沿用原文件）。空间快照非活动几何属性不得叫 `fid` 或 `geom`（忽略大小写），避免 GDAL 保留字段吞掉业务属性。清单保存哈希、版本、字段类型及显式记录的参数；CSV 本身不存类型。导出使用临时目录与互斥锁，失败清理临时产物，已有输出不会覆盖。
 
 metadata 与 report.metadata 均为未核验用户声明；清单 `status=success` 指导出成功，`reproducibility=complete` 指声明输入和脚本齐备，不表示自动执行脚本或科学结论已验证。用户需另存依赖锁和外部资源，并核查隐私。
+
+可选本地 GUI 的入口为 `crazy-buffer-gui`，安装 `gui` extra。GUI 服务组合公开 API，不改变其算法契约；JSON+WKB 快照通过 `export_run(input_files=...)` 纳入清单和哈希，字段范围仅为所选分析实际使用字段。详见 [GUI](gui.md)。

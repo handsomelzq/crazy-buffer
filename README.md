@@ -14,7 +14,7 @@ result = buffer_stats(parks, homes, source_id='id', target_id='id',
 assert result.loc[0, 'mean_value'] == 20000.0
 ```
 
-面向 Python 3.12 的小型空间分析库：缓冲区、范围内点关系与均值、点到点最近距离。面向可组合 Python API；CLI 和 GUI 尚未实现。距离为局部投影下的平面直线距离，不计算路网可达性，不作因果推断。
+面向 Python 3.12 的小型空间分析库：缓冲区、范围内点关系与均值、点到点最近距离。提供可组合 Python API 和可选本地 GUI；支持直线距离与估计路网距离，不作因果推断。
 
 安装和运行（先安装 uv；首次同步需要下载依赖）：
 
@@ -38,3 +38,5 @@ uv run --locked python park-run/artifacts/script.py park-replay
 输入快照可能包含原始个人信息和位置，分享整个运行目录前请脱敏并核查授权。本库不上传数据；仓库合成数据不含真实用户信息。
 
 详见 [API](docs/api.md)、[方法边界](docs/methods.md)、[数据来源](docs/data-sources.md)、[合成数据说明](examples/data/README.md)。代码使用 [MIT](LICENSE)；合成数据另用 [CC0](examples/data/LICENSE)。第三方数据不随包分发。CI 已编写 Windows/macOS/Linux Python 3.12 测试矩阵；是否通过以实际 GitHub 运行记录为准。
+
+本地 GUI：`uv run --extra gui crazy-buffer-gui`，浏览器访问终端显示的 `127.0.0.1` 地址。包含三个确定性合成示例、CSV/GPKG 上传、结果 CSV 与可重放 ZIP。详见 [GUI 使用说明](docs/gui.md) 和 [路网方法](docs/network.md)。
