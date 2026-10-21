@@ -14,4 +14,4 @@ CSV 点数据需选择 X/Y 字段、原始 CRS 与唯一 ID；ID 按字符串保
 
 将 ZIP 解压到任意目录，在已安装同版本 `crazy-buffer[gui]` 的 Python 环境运行 `python /绝对路径/replay.py`（或 artifacts/script.py）。脚本使用包接口、不启动 Streamlit、不依赖仓库路径，不执行上传代码；输出 replayed.csv 与 replayed-quality.json。保留项目 uv.lock 可帮助恢复依赖。清单中的 complete 只代表输入与脚本齐备，不意味着自动验证科学结论或未来环境兼容。
 
-验证使用合成数据的服务测试、仓库外脚本重放与 Streamlit AppTest；没有执行真实北京数据核对、QGIS 核对或浏览器人工验收。CI 配置了三平台可选 GUI 测试，云端状态以实际运行记录为准。
+验证使用合成数据的服务测试、仓库外脚本重放与 Streamlit AppTest。开发代理已通过本地浏览器交互检查三个合成示例：缓冲均值为 10、30，直线距离约为 22.36、10 米，路网总距离为 30、10 米。上传路径通过服务测试与 AppTest 验证，未做浏览器上传验收；未执行真实北京数据或 QGIS 核对。CI 配置了三平台可选 GUI 测试，云端状态以实际运行记录为准。

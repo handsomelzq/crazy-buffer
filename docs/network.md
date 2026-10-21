@@ -10,4 +10,4 @@
 
 路由使用延迟导入的 NetworkX：基础包与建网无需安装 NetworkX，调用路由时才需要。Network 的 edges 应视为只读，不应直接修改；建网时已经复制原始输入。临时图在每次调用中构造，不改变输入或 Network 快照。每个目标执行一次反向 Dijkstra，流式更新各源最小总距离和并列计数，不构造源目标完整矩阵。时间复杂度 O(T·((V+E) log V+S))，路由额外存储 O(V+S)，另含临时图、接入点及吸附几何处理成本。逐源比较实际计算得到的总距离，保留源接入距离相加后产生的浮点严格相等。适合区域尺度内存路网与适量目标，未承诺全城/全国道路规模性能；大量重叠边和大量严格等距目标需先基准测试。
 
-可重放合成示例：`python examples/scripts/network_station.py /tmp/network-run`。导出目录包含输入三层 GeoPackage、脚本、结果、RunReport 与运行版本；在仓库外执行 `python /tmp/network-run/artifacts/script.py /tmp/network-replay` 可读取保存快照重新计算。输出目录必须不存在且父目录已存在。NetworkX/Streamlit 安装版本会随 export_run 记录，未安装显示 unknown。
+只安装路网可选依赖并运行合成示例：`uv run --extra network python examples/scripts/network_station.py /tmp/network-run`（可将输出目录替换为自选 OUTPUT）。首次运行会同步依赖，不需要安装 GUI。导出目录包含输入三层 GeoPackage、脚本、结果、RunReport 与运行版本；在仓库外执行 `python /tmp/network-run/artifacts/script.py /tmp/network-replay` 可读取保存快照重新计算。输出目录必须不存在且父目录已存在。NetworkX/Streamlit 安装版本会随 export_run 记录，未安装显示 unknown。

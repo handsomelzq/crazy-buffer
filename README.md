@@ -22,7 +22,7 @@ assert result.loc[0, 'mean_value'] == 20000.0
 uv sync --locked
 uv run --locked python examples/scripts/park_prices.py park-run
 uv run --locked python examples/scripts/nearest_station.py station-run
-uv run --locked pytest -q
+uv run --locked --extra gui pytest -q
 ```
 
 输出目录的父目录须存在、目标目录须不存在。两个例子均只用 CC0 合成数据，不下载外部资料。首例 P1 均价为 20000 元/平方米；次例 001 最近站为 A、距离 5 米、等距数为 2。Notebook 位于 examples/notebooks，仅通过结构和代码语法检查，未预执行。Notebook 运行时须选择安装本项目的 Python 3.12 内核。
