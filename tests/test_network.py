@@ -1,4 +1,5 @@
 import builtins
+from numbers import Integral
 import geopandas as gpd
 import pandas as pd
 import pytest
@@ -164,3 +165,15 @@ def test_linestring_geopackage_reader(tmp_path):
     result = read_geopackage(path, layer='roads', id_column='id')
     assert result.id.tolist() == ['001']
     assert build_network(result, edge_id='id').edges.geometry.iloc[0].length == 10
+
+
+def test_large_integer_target_id_with_unreachable_source():
+    net = roads([[(0, 0), (10, 0)], [(20, 0), (30, 0)]])
+    sources = layer(['connected', 'disconnected'], [Point(0, 0), Point(20, 0)])
+    large_id = 9007199254740993
+    targets = layer(pd.Series([large_id], dtype='int64'), [Point(10, 0)])
+    result = nearest_network_distance(sources, targets, net, source_id='id', target_id='id')
+    assert result.target_id.iloc[0] == large_id
+    assert isinstance(result.target_id.iloc[0], Integral)
+    assert result.target_id.iloc[1] is None
+    assert result.status.tolist() == ['ok', 'unreachable']

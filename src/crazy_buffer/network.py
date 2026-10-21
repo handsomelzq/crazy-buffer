@@ -175,7 +175,11 @@ def nearest_network_distance(sources, targets, network, *, source_id, target_id,
                              target_snaps[chosen][1], total, count, status))
             else:
                 rows.append((identifier, None, access, np.nan, np.nan, np.nan, 0, status))
+        # Construct identifiers directly from raw records: pandas otherwise
+        # infers float for integer IDs mixed with None, losing values > 2**53.
+        raw_target_ids = [row[1] for row in rows]
         result = pd.DataFrame.from_records(rows, columns=_COLUMNS)
+        result['target_id'] = pd.Series(raw_target_ids, dtype=object)
         result['source_id'] = pd.Series(result.source_id.tolist(), dtype=sources[source_id].dtype)
         target_dtype = targets[target_id].dtype if result.empty or result.target_id.notna().all() else object
         result['target_id'] = pd.Series(result.target_id.tolist(), dtype=target_dtype)
