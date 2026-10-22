@@ -13,7 +13,8 @@
 | `uv build --offline` | wheel 与 sdist 构建成功 |
 | 构建内容检查 | 包含三个新模块；没有 `.cache`、`.venv` 或 `__pycache__` |
 | 源码静态编译 | 通过；首次仅因系统 Python 缓存目录权限失败，改用项目内缓存后成功 |
-| GitHub Actions 首次运行 | macOS/Linux 通过；Windows 暴露 ZIP 反斜杠路径与非 UTF-8 文本解码，已修复并重跑 |
+| GitHub Actions 首次运行 | macOS/Linux 通过；Windows 暴露 ZIP 反斜杠路径与非 UTF-8 文本解码 |
+| GitHub Actions 修复后 | Linux、macOS、Windows 三个 Job 全部通过，57 秒 |
 
 ## 浏览器检查
 
@@ -27,4 +28,4 @@
 
 - 按要求未执行真实北京数据、Geofabrik 下载或 QGIS 交叉核对。
 - 未做城市级分类 POI 或大版图用地的性能基准。
-- GitHub Actions 的本次提交状态须以远端实际运行记录为准。
+- 后续提交仍须以对应 GitHub Actions 运行记录为准。

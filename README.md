@@ -1,5 +1,7 @@
 # crazy-buffer
 
+[![tests](https://github.com/handsomelzq/crazy-buffer/actions/workflows/tests.yml/badge.svg?branch=feat/mvp)](https://github.com/handsomelzq/crazy-buffer/actions/workflows/tests.yml)
+
 ```python
 import geopandas as gpd
 from shapely.geometry import Point
