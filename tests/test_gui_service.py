@@ -12,12 +12,17 @@ from crazy_buffer.gui import service as svc
 
 
 def parameters(task):
-    return dict(task=task, sources_id='id', targets_id='id', edges_id='id', analysis_crs='EPSG:32650',
-                radius_m=50., value_column='value', directed=False, max_snap_distance_m=100.,
-                from_node='start', to_node='end')
+    values = dict(task=task, sources_id='id', targets_id='id', edges_id='id',
+                  land_use_id='id', analysis_crs='EPSG:32650',
+                  radius_m=50., value_column='value', category_column='type',
+                  buffer_sources=True, directed=False, max_snap_distance_m=100.,
+                  from_node='start', to_node='end')
+    if task == 'landuse':
+        values['category_column'] = 'use'
+    return values
 
 
-@pytest.mark.parametrize('task', ['buffer', 'nearest', 'network'])
+@pytest.mark.parametrize('task', ['buffer', 'nearest', 'network', 'facilities', 'landuse'])
 def test_export_replay_outside_repository(tmp_path, task):
     if task == 'network':
         pytest.importorskip('networkx')
@@ -31,14 +36,18 @@ def test_export_replay_outside_repository(tmp_path, task):
         archive.extractall(tmp_path)
     subprocess.run([sys.executable, str(tmp_path / 'replay.py')], cwd=tmp_path, check=True,
                    capture_output=True, text=True, timeout=30)
-    expected = pd.read_csv(tmp_path / 'results.csv', dtype={'source_id': 'string', 'target_id': 'string'})
-    actual = pd.read_csv(tmp_path / 'replayed.csv', dtype={'source_id': 'string', 'target_id': 'string'})
+    expected = pd.read_csv(tmp_path / 'results.csv')
+    actual = pd.read_csv(tmp_path / 'replayed.csv')
     pd.testing.assert_frame_equal(expected, actual)
     snapshot = json.loads((tmp_path / 'inputs/inputs.json').read_text())
     assert snapshot['sources']['columns']['id']['values'] == ['001', '002']
     assert snapshot['sources']['geometry_column'] == 'position'
     if task == 'network':
         assert snapshot['edges']['columns']['start']['dtype'] == 'int64'
+    if task == 'facilities':
+        assert snapshot['targets']['columns']['type']['values'] == ['公园', '商业']
+    if task == 'landuse':
+        assert snapshot['land_use']['columns']['use']['values'] == ['居住', '绿地', '商业']
 
 
 def test_csv_leading_zeros_and_limits(monkeypatch):

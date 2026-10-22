@@ -9,8 +9,8 @@ from .operations import iter_neighbor_batches, make_buffers, neighbors_within
 __all__ = ["make_buffers", "neighbors_within", "iter_neighbor_batches", "SpatialInputError", "RunReport", "read_points_csv", "read_geopackage", "prepare_layer"]
 
 from .operations.aggregate import summarize_neighbors
-from .recipes import buffer_stats
-__all__ += ['summarize_neighbors', 'buffer_stats']
+from .recipes import buffer_stats, facility_mix, land_use_mix
+__all__ += ['summarize_neighbors', 'buffer_stats', 'facility_mix', 'land_use_mix']
 
 from .operations.nearest import nearest_distance
 __all__ += ['nearest_distance']

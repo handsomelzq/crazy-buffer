@@ -10,9 +10,29 @@ from crazy_buffer.gui.service import demo_inputs, inspect_upload, load_upload, f
 
 st.set_page_config(page_title='Crazy Buffer · 空间分析工作台', layout='wide')
 st.markdown(f"<style>{Path(__file__).with_name('style.css').read_text()}</style>", unsafe_allow_html=True)
-TASKS = {'buffer': '缓冲区统计', 'nearest': '最近直线距离', 'network': '路网步行距离'}
-LABELS = {'sources': '研究对象', 'targets': '目标点', 'edges': '步行道路'}
-COLORS = {'sources': '🟢', 'targets': '🟠', 'edges': '🔵'}
+TASKS = {
+    'buffer': '缓冲区统计',
+    'facilities': '周边设施',
+    'landuse': '用地构成',
+    'nearest': '最近直线距离',
+    'network': '路网步行距离',
+}
+LABELS = {
+    'sources': '研究对象',
+    'targets': '目标点',
+    'edges': '步行道路',
+    'land_use': '用地分类',
+}
+COLORS = {
+    'sources': '🟢', 'targets': '🟠', 'edges': '🔵', 'land_use': '🟡',
+}
+TASK_ROLES = {
+    'buffer': ['sources', 'targets'],
+    'nearest': ['sources', 'targets'],
+    'network': ['sources', 'targets', 'edges'],
+    'facilities': ['sources', 'targets'],
+    'landuse': ['sources', 'land_use'],
+}
 brand, task_area = st.columns([3, 1.4], vertical_alignment='center')
 with brand:
     st.markdown('<div class="brand"><span class="brand-mark">⊕</span><span>CRAZY BUFFER'
@@ -24,7 +44,7 @@ params = {'task': task}
 inputs = {}
 fingerprint_parts = []
 ready = True
-roles = ['sources', 'targets'] + (['edges'] if task == 'network' else [])
+roles = TASK_ROLES[task]
 visible_roles = []
 with left:
     st.markdown('<div class="panel-label">01 / 图层与数据</div>', unsafe_allow_html=True)
@@ -41,7 +61,7 @@ with left:
         with st.container(border=True):
             st.markdown(f'**{COLORS[role]} {LABELS[role]}**')
             if mode == '上传数据':
-                upload = st.file_uploader(f'{LABELS[role]}文件', type=['gpkg'] if role == 'edges' else ['csv', 'gpkg'],
+                upload = st.file_uploader(f'{LABELS[role]}文件', type=['gpkg'] if role in {'edges', 'land_use'} else ['csv', 'gpkg'],
                                           key=f'upload_{role}', label_visibility='collapsed')
                 if upload is None:
                     ready = False
@@ -104,10 +124,50 @@ with right:
         st.caption('按目标样本等权平均；面对象以完整边界向外缓冲。')
     elif task == 'nearest':
         st.caption('为每个研究点寻找直线距离最近的目标点，输出米制距离。')
-    else:
+    elif task == 'network':
         st.caption('先接入道路，再沿路网寻找最近可达的目标点。')
         params['max_snap_distance_m'] = st.number_input('最大接入距离（米）', value=100.0, step=10.0, key='max_snap')
         st.caption('道路须已有正确拓扑。线内部交叉不会自动连通。')
+    elif task == 'facilities':
+        st.caption('统计每个研究对象周边各类设施的数量、密度与多样性。')
+        params['radius_m'] = st.number_input(
+            '搜索距离（米）', value=50.0 if mode == '合成示例' else 1500.0,
+            step=10.0, key=f'facility_radius_{mode}',
+        )
+        if 'targets' in inputs:
+            fields = [c for c in inputs['targets'].columns if c != inputs['targets'].geometry.name]
+            preferred = fields.index('type') if 'type' in fields else 0
+            params['category_column'] = st.selectbox(
+                '设施类别字段', fields, index=preferred, key='facility_category',
+            )
+        st.caption('密度以完整缓冲面积计；混合度按研究范围内出现的类别计算。')
+    else:
+        st.caption('统计研究单元内各类用地的面积、占比与功能混合度。')
+        source_types = (
+            set(inputs['sources'].geometry.geom_type)
+            if 'sources' in inputs else set()
+        )
+        self_supported = bool(source_types) and source_types <= {'Polygon', 'MultiPolygon'}
+        scope_options = ['向外缓冲'] + (['研究对象自身'] if self_supported else [])
+        scope = st.radio(
+            '统计范围', scope_options, horizontal=True,
+            key=f'landuse_scope_{mode}',
+        )
+        params['buffer_sources'] = scope == '向外缓冲'
+        if params['buffer_sources']:
+            params['radius_m'] = st.number_input(
+                '缓冲距离（米）', value=50.0 if mode == '合成示例' else 1500.0,
+                step=10.0, key=f'landuse_radius_{mode}',
+            )
+        if 'land_use' in inputs:
+            fields = [c for c in inputs['land_use'].columns if c != inputs['land_use'].geometry.name]
+            preferred = fields.index('use') if 'use' in fields else 0
+            params['category_column'] = st.selectbox(
+                '用地类别字段', fields, index=preferred, key='land_use_category',
+            )
+        st.caption('占比以分析范围面积为分母；覆盖率提示分类数据缺口。')
+        if not self_supported:
+            st.caption('研究对象为点时使用向外缓冲；上传规则面后可直接按自身范围统计。')
     default_crs = 'EPSG:32650' if mode == '合成示例' else ''
     if mode != '合成示例' and 'sources' in inputs and len(inputs['sources']):
         try:
@@ -155,7 +215,8 @@ with center:
     with controls[0]:
         basemap = st.checkbox('显示底图', value=True, key='basemap')
     with controls[1]:
-        show_buffer = st.checkbox('缓冲预览', value=True, disabled=task != 'buffer', key='show_buffer')
+        buffer_enabled = task in {'buffer', 'facilities', 'landuse'}
+        show_buffer = st.checkbox('缓冲预览', value=True, disabled=not buffer_enabled, key='show_buffer')
     with controls[2]:
         st.caption('拖动平移 · 滚轮缩放')
     deck, warnings = build_map({r: inputs[r] for r in roles if r in inputs}, params, visible_roles=visible_roles,
@@ -163,7 +224,7 @@ with center:
     st.pydeck_chart(deck, height=540, key='workspace_map')
     for warning in warnings:
         st.warning(warning)
-    st.caption('● 绿色：研究对象　● 陶土色：目标点　━ 蓝灰色：道路　◯ 淡绿：缓冲预览')
+    st.caption('● 绿色：研究对象　● 陶土色：目标点　● 黄绿：用地分类　━ 蓝灰色：道路　◯ 淡绿：缓冲预览')
     if basemap:
         st.caption('底图 © OpenStreetMap contributors / CARTO · 需联网加载。地图视野会发送给瓦片服务；分析文件不上传。底图不可用时，可关闭底图继续查看数据。')
     if mode == '合成示例':

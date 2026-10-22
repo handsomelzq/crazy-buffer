@@ -14,7 +14,9 @@ result = buffer_stats(parks, homes, source_id='id', target_id='id',
 assert result.loc[0, 'mean_value'] == 20000.0
 ```
 
-面向 Python 3.12 的小型空间分析库：缓冲区、范围内点关系与均值、点到点最近距离。提供可组合 Python API 和可选本地 GUI；支持直线距离与估计路网距离，不作因果推断。
+面向 Python 3.12 的小型空间研究变量库：缓冲区、范围内点关系与均值、
+分类 POI 数量/密度/多样性、用地面积/占比/混合度、最近距离与估计路网距离。
+提供可组合 Python API 和可选本地 GUI；不作因果推断。
 
 安装和运行（先安装 uv；首次同步需要下载依赖）：
 
@@ -22,6 +24,8 @@ assert result.loc[0, 'mean_value'] == 20000.0
 uv sync --locked
 uv run --locked python examples/scripts/park_prices.py park-run
 uv run --locked python examples/scripts/nearest_station.py station-run
+uv run --locked python examples/scripts/facility_mix.py facility-run
+uv run --locked python examples/scripts/land_use_mix.py land-use-run
 uv run --locked --extra gui pytest -q
 ```
 
@@ -39,4 +43,4 @@ uv run --locked python park-run/artifacts/script.py park-replay
 
 详见 [API](docs/api.md)、[方法边界](docs/methods.md)、[数据来源](docs/data-sources.md)、[合成数据说明](examples/data/README.md)。代码使用 [MIT](LICENSE)；合成数据另用 [CC0](examples/data/LICENSE)。第三方数据不随包分发。CI 已编写 Windows/macOS/Linux Python 3.12 测试矩阵；是否通过以实际 GitHub 运行记录为准。
 
-本地 GUI：`uv run --extra gui crazy-buffer-gui`，浏览器访问终端显示的 `127.0.0.1` 地址。包含三个确定性合成示例、CSV/GPKG 上传、结果 CSV 与可重放 ZIP。详见 [GUI 使用说明](docs/gui.md) 和 [路网方法](docs/network.md)。
+本地 GUI：`uv run --extra gui crazy-buffer-gui`，浏览器访问终端显示的 `127.0.0.1` 地址。提供缓冲区统计、周边设施、用地构成、最近直线距离与路网步行距离，包含确定性合成示例、CSV/GPKG 上传、地图预览、结果 CSV 与可重放 ZIP。详见 [GUI 使用说明](docs/gui.md)、[方法边界](docs/methods.md) 和 [路网方法](docs/network.md)。

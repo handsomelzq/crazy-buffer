@@ -13,7 +13,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.mark.parametrize('name', ['park_prices', 'nearest_station'])
+@pytest.mark.parametrize(
+    'name', ['park_prices', 'nearest_station', 'facility_mix', 'land_use_mix'],
+)
 def test_example_and_snapshot_replay(name, tmp_path):
     path = ROOT / 'examples' / 'scripts' / f'{name}.py'
     spec = importlib.util.spec_from_file_location(name, path)
@@ -23,9 +25,15 @@ def test_example_and_snapshot_replay(name, tmp_path):
     result = pd.read_csv(out / 'results.csv')
     if name == 'park_prices':
         assert result.loc[0, 'mean_value'] == 20000.0
-    else:
+    elif name == 'nearest_station':
         assert result.loc[0, 'target_id'] == 'A'
         assert result.loc[0, 'distance_m'] == 5.0
+    elif name == 'facility_mix':
+        assert result.loc[0, 'count_餐饮'] == 2
+        assert result.loc[0, 'count_商业'] == 1
+    else:
+        assert result.loc[0, 'share_居住'] == pytest.approx(0.6)
+        assert result.loc[0, 'share_绿地'] == pytest.approx(0.2)
     manifest = json.loads((out / 'run_manifest.json').read_text())
     assert manifest['status'] == 'success'
     assert manifest['reproducibility'] == 'complete'

@@ -6,7 +6,7 @@ from streamlit.testing.v1 import AppTest
 APP = Path(__file__).resolve().parents[1] / 'src/crazy_buffer/gui/app.py'
 
 
-@pytest.mark.parametrize('task', ['buffer', 'nearest', 'network'])
+@pytest.mark.parametrize('task', ['buffer', 'nearest', 'network', 'facilities', 'landuse'])
 def test_demo_run_and_invalidate(task):
     app = AppTest.from_file(str(APP), default_timeout=30).run()
     app.selectbox[0].select(task).run()
@@ -42,6 +42,21 @@ def test_task_switch_and_threshold_invalidate():
     assert 'frozen' in app.session_state
     app.number_input[0].set_value(50.).run()
     assert 'frozen' not in app.session_state
+
+
+def test_research_task_controls_invalidate_and_keep_display_settings():
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    app.selectbox(key='task').select('facilities').run()
+    app.number_input(key='facility_radius_合成示例').set_value(60.).run()
+    app.button[0].click().run()
+    assert not app.error
+    assert 'count_公园' in app.session_state['frozen']['result'].columns
+    app.selectbox(key='task').select('landuse').run()
+    assert 'frozen' not in app.session_state
+    assert app.radio(key='landuse_scope_合成示例').options == ['向外缓冲']
+    app.button[0].click().run()
+    assert not app.error
+    assert 'share_绿地' in app.session_state['frozen']['result'].columns
 
 
 def test_invalid_analysis_crs():

@@ -46,6 +46,30 @@ def test_polygon_buffer_uses_metres_and_preserves_source():
     assert not notices
 
 
+def test_land_use_layer_and_facility_buffer_preview():
+    metric = frame([Point(500000, 4400000)], "EPSG:32650")
+    land_use = gpd.GeoDataFrame(
+        {"id": ["g"], "use": ["green"]},
+        geometry=[Polygon([
+            (499900, 4399900), (500100, 4399900),
+            (500100, 4400100), (499900, 4400100),
+        ])],
+        crs=metric.crs,
+    )
+    deck, notices = build_map(
+        {"sources": metric, "land_use": land_use},
+        {
+            "task": "facilities", "sources_id": "id",
+            "radius_m": 50, "analysis_crs": "EPSG:32650",
+        },
+    )
+    layer_ids = [layer.id for layer in deck.layers]
+    assert set(layer_ids) == {
+        "preview-buffer", "preview-land_use", "preview-sources",
+    }
+    assert not notices
+
+
 @pytest.mark.parametrize("crs", ["EPSG:4326", "EPSG:3857", "bad"])
 def test_bad_analysis_crs_keeps_input_visible(crs):
     deck, notices = build_map(

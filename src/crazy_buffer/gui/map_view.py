@@ -11,11 +11,15 @@ from shapely.geometry import mapping
 from crazy_buffer.validate import _metric_crs
 
 MAX_PREVIEW_FEATURES = 2000
-ROLE_LABELS = {"sources": "研究对象", "targets": "目标数据", "edges": "道路"}
+ROLE_LABELS = {
+    "sources": "研究对象", "targets": "目标数据",
+    "edges": "道路", "land_use": "用地分类",
+}
 ROLE_COLORS = {
     "sources": [37, 115, 99, 200],
     "targets": [210, 137, 65, 210],
     "edges": [91, 109, 125, 180],
+    "land_use": [151, 170, 122, 135],
     "buffer": [37, 115, 99, 35],
 }
 # Streamlit's frontend requires a URL string even though pydeck accepts dicts.
@@ -134,7 +138,7 @@ def build_map(inputs, params, *, visible_roles=None, show_buffer=True, basemap=T
     messages, layers, bounds = [], [], []
     visible = set(inputs) if visible_roles is None else set(visible_roles)
     source_preview = None
-    for role in ("edges", "sources", "targets"):
+    for role in ("edges", "land_use", "sources", "targets"):
         if role not in visible or role not in inputs:
             continue
         selected = _preview_frame(inputs[role], role, messages)
@@ -147,7 +151,14 @@ def build_map(inputs, params, *, visible_roles=None, show_buffer=True, basemap=T
             continue
         layers.append(_layer(geographic, role, params.get(role + "_id")))
         bounds.append(geographic.total_bounds)
-    if show_buffer and params.get("task") == "buffer" and source_preview is not None:
+    should_buffer = (
+        params.get("task") in {"buffer", "facilities"}
+        or (
+            params.get("task") == "landuse"
+            and params.get("buffer_sources", False)
+        )
+    )
+    if show_buffer and should_buffer and source_preview is not None:
         try:
             radius = float(params.get("radius_m", 0))
             if not math.isfinite(radius) or radius <= 0:

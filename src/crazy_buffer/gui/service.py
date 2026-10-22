@@ -10,12 +10,20 @@ import geopandas as gpd
 import pandas as pd
 import pyogrio
 from shapely import from_wkb
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString, Point, box
 from crazy_buffer import (RunReport, prepare_layer, buffer_stats, nearest_distance,
-                          build_network, nearest_network_distance, export_run)
+                          build_network, nearest_network_distance, export_run,
+                          facility_mix, land_use_mix)
 
 MAX_BYTES = 20 * 1024 * 1024
-LIMITS = {'sources': 5000, 'targets': 5000, 'edges': 20000}
+LIMITS = {'sources': 5000, 'targets': 5000, 'edges': 20000, 'land_use': 5000}
+TASK_ROLES = {
+    'buffer': ('sources', 'targets'),
+    'nearest': ('sources', 'targets'),
+    'network': ('sources', 'targets', 'edges'),
+    'facilities': ('sources', 'targets'),
+    'landuse': ('sources', 'land_use'),
+}
 
 
 def check_bytes(data):
@@ -77,9 +85,17 @@ def load_upload(data, *, kind, role, layer=None, x=None, y=None, crs=None):
 def demo_inputs():
     crs = 'EPSG:32650'
     sources = gpd.GeoDataFrame({'id': ['001', '002']}, geometry=[Point(0, 10), Point(90, 0)], crs=crs)
-    targets = gpd.GeoDataFrame({'id': ['010', '020'], 'value': [10., 30.]}, geometry=[Point(20, 0), Point(100, 0)], crs=crs)
+    targets = gpd.GeoDataFrame(
+        {'id': ['010', '020'], 'value': [10., 30.], 'type': ['公园', '商业']},
+        geometry=[Point(20, 0), Point(100, 0)], crs=crs,
+    )
     edges = gpd.GeoDataFrame({'id': ['road'], 'start': [1], 'end': [2]}, geometry=[LineString([(0, 0), (100, 0)])], crs=crs)
-    return {'sources': sources, 'targets': targets, 'edges': edges}
+    land_use = gpd.GeoDataFrame(
+        {'id': ['residential', 'green', 'commercial'], 'use': ['居住', '绿地', '商业']},
+        geometry=[box(-20, -20, 20, 20), box(20, -20, 60, 20), box(80, -20, 120, 20)],
+        crs=crs,
+    )
+    return {'sources': sources, 'targets': targets, 'edges': edges, 'land_use': land_use}
 
 
 def encode_frame(frame):
@@ -109,29 +125,60 @@ def decode_frame(snapshot):
 def run_analysis(inputs, params):
     if params['task'] == 'buffer' and params['value_column'] == params['targets_id']:
         raise ValueError('统计值字段不能与目标唯一 ID 字段相同；请选择独立的数值字段，避免数值转换改变业务 ID。')
+    if params['task'] == 'facilities' and params['category_column'] == params['targets_id']:
+        raise ValueError('设施类别字段不能与目标唯一 ID 字段相同。')
+    if params['task'] == 'landuse' and params['category_column'] == params['land_use_id']:
+        raise ValueError('用地类别字段不能与用地唯一 ID 字段相同。')
     report = RunReport()
     prepared = {}
-    roles = ('sources', 'targets', 'edges') if params['task'] == 'network' else ('sources', 'targets')
+    roles = TASK_ROLES[params['task']]
     for role in roles:
         if len(inputs[role]) > LIMITS[role]:
             raise ValueError(f'{role} 最多 {LIMITS[role]} 行。')
     if params['task'] == 'network' and len(inputs['targets']) * (len(inputs['sources']) + len(inputs['edges'])) > 2_000_000:
         raise ValueError('路由工作量超过 2000000；请按研究区裁剪道路或减少目标。')
     for role in roles:
+        if role == 'edges':
+            geometry_types = ('LineString',)
+        elif role == 'land_use':
+            geometry_types = ('Polygon', 'MultiPolygon')
+        elif role == 'sources' and params['task'] in ('buffer', 'facilities', 'landuse'):
+            geometry_types = ('Point', 'Polygon', 'MultiPolygon')
+        else:
+            geometry_types = ('Point',)
         prepared[role] = prepare_layer(inputs[role], id_column=params[role + '_id'], analysis_crs=params['analysis_crs'],
-            geometry_types=(('LineString',) if role == 'edges' else ('Point', 'Polygon', 'MultiPolygon') if role == 'sources' and params['task'] == 'buffer' else ('Point',)),
+            geometry_types=geometry_types,
             coordinate_system=params.get('coordinate_system', 'declared_crs'), report=report)
-    common = dict(source_id=params['sources_id'], target_id=params['targets_id'], report=report)
+    common = dict(
+        source_id=params['sources_id'],
+        target_id=params.get('targets_id'),
+        report=report,
+    )
     if params['task'] == 'buffer':
         prepared['targets'][params['value_column']] = pd.to_numeric(prepared['targets'][params['value_column']], errors='raise')
         result = buffer_stats(prepared['sources'], prepared['targets'], radius_m=params['radius_m'], value_column=params['value_column'], **common)
     elif params['task'] == 'nearest':
         result = nearest_distance(prepared['sources'], prepared['targets'], **common)
-    else:
+    elif params['task'] == 'network':
         network = build_network(prepared['edges'], edge_id=params['edges_id'], directed=params['directed'],
             from_node=params.get('from_node'), to_node=params.get('to_node'), report=report)
         result = nearest_network_distance(prepared['sources'], prepared['targets'], network,
             max_snap_distance_m=params['max_snap_distance_m'], **common)
+    elif params['task'] == 'facilities':
+        result = facility_mix(
+            prepared['sources'], prepared['targets'],
+            source_id=params['sources_id'], target_id=params['targets_id'],
+            category_column=params['category_column'],
+            radius_m=params['radius_m'], report=report,
+        )
+    else:
+        result = land_use_mix(
+            prepared['sources'], prepared['land_use'],
+            source_id=params['sources_id'], land_use_id=params['land_use_id'],
+            category_column=params['category_column'],
+            radius_m=params['radius_m'] if params.get('buffer_sources') else None,
+            report=report,
+        )
     return result, report
 
 
@@ -152,7 +199,7 @@ result.to_csv(root / "replayed.csv", index=False)
 
 
 def freeze_run(inputs, params):
-    roles = ('sources', 'targets', 'edges') if params['task'] == 'network' else ('sources', 'targets')
+    roles = TASK_ROLES[params['task']]
     # Snapshot only fields used by this analysis; unrelated date/object attributes
     # must not prevent reproducible computation or unnecessarily expose data.
     selected = {}
@@ -160,6 +207,10 @@ def freeze_run(inputs, params):
         columns = [params[role + '_id'], inputs[role].geometry.name]
         if role == 'targets' and params['task'] == 'buffer':
             columns.append(params['value_column'])
+        if role == 'targets' and params['task'] == 'facilities':
+            columns.append(params['category_column'])
+        if role == 'land_use':
+            columns.append(params['category_column'])
         if role == 'edges':
             columns.extend(params[key] for key in ('from_node', 'to_node') if params.get(key))
         selected[role] = inputs[role][list(dict.fromkeys(columns))].copy()
