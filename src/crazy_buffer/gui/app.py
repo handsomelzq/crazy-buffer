@@ -9,7 +9,10 @@ from crazy_buffer.gui.map_view import build_map
 from crazy_buffer.gui.service import demo_inputs, inspect_upload, load_upload, freeze_run
 
 st.set_page_config(page_title='Crazy Buffer · 空间分析工作台', layout='wide')
-st.markdown(f"<style>{Path(__file__).with_name('style.css').read_text()}</style>", unsafe_allow_html=True)
+st.markdown(
+    f"<style>{Path(__file__).with_name('style.css').read_text(encoding='utf-8')}</style>",
+    unsafe_allow_html=True,
+)
 TASKS = {
     'buffer': '缓冲区统计',
     'facilities': '周边设施',

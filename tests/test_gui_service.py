@@ -35,11 +35,11 @@ def test_export_replay_outside_repository(tmp_path, task):
         assert {'results.csv', 'quality.json', 'run_manifest.json', 'inputs/inputs.json', 'inputs/parameters.json', 'artifacts/script.py', 'replay.py'} <= set(archive.namelist())
         archive.extractall(tmp_path)
     subprocess.run([sys.executable, str(tmp_path / 'replay.py')], cwd=tmp_path, check=True,
-                   capture_output=True, text=True, timeout=30)
+                   capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
     expected = pd.read_csv(tmp_path / 'results.csv')
     actual = pd.read_csv(tmp_path / 'replayed.csv')
     pd.testing.assert_frame_equal(expected, actual)
-    snapshot = json.loads((tmp_path / 'inputs/inputs.json').read_text())
+    snapshot = json.loads((tmp_path / 'inputs/inputs.json').read_text(encoding='utf-8'))
     assert snapshot['sources']['columns']['id']['values'] == ['001', '002']
     assert snapshot['sources']['geometry_column'] == 'position'
     if task == 'network':
@@ -117,7 +117,8 @@ def test_zip_strict_json_hashes_and_unused_attributes(tmp_path):
         assert snapshots['targets']['columns']['value']['values'][0] is None
         archive.extractall(tmp_path)
     completed = subprocess.run([sys.executable, str(tmp_path / 'artifacts/script.py')], cwd=tmp_path,
-                               capture_output=True, text=True, timeout=30, check=True)
+                               capture_output=True, text=True, encoding='utf-8',
+                               errors='replace', timeout=30, check=True)
     assert 'ScriptRunContext' not in completed.stderr
     assert (tmp_path / 'replayed.csv').exists()
 
@@ -148,7 +149,8 @@ def test_launcher_loopback_and_optional_imports(monkeypatch):
     completed = subprocess.run([sys.executable, '-c',
         'import sys; import crazy_buffer; import crazy_buffer.gui; '
         'assert "streamlit" not in sys.modules; assert "networkx" not in sys.modules'],
-        check=True, capture_output=True, text=True, timeout=30)
+        check=True, capture_output=True, text=True, encoding='utf-8',
+        errors='replace', timeout=30)
 
 
 def test_nonspatial_gpkg_layers_rejected(tmp_path):

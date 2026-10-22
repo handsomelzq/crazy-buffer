@@ -34,7 +34,7 @@ def test_example_and_snapshot_replay(name, tmp_path):
     else:
         assert result.loc[0, 'share_居住'] == pytest.approx(0.6)
         assert result.loc[0, 'share_绿地'] == pytest.approx(0.2)
-    manifest = json.loads((out / 'run_manifest.json').read_text())
+    manifest = json.loads((out / 'run_manifest.json').read_text(encoding='utf-8'))
     assert manifest['status'] == 'success'
     assert manifest['reproducibility'] == 'complete'
     assert len(gpd.read_file(out / 'results.gpkg', layer='data')) == len(result)
@@ -42,7 +42,8 @@ def test_example_and_snapshot_replay(name, tmp_path):
         assert len(gpd.read_file(out / item['path'], layer='data')) > 0
     replay = tmp_path / f'{name}-replay'
     subprocess.run([sys.executable, str(out / 'artifacts' / 'script.py'), str(replay)],
-                   cwd=tmp_path, check=True, timeout=30)
+                   cwd=tmp_path, check=True, timeout=30,
+                   capture_output=True, text=True, encoding='utf-8', errors='replace')
     pd.testing.assert_frame_equal(result, pd.read_csv(replay / 'results.csv'))
 
 

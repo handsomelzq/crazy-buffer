@@ -9,3 +9,5 @@
 - Add "周边设施" and "用地构成" to the local GUI, including native map layers,
   buffer previews, CSV export and reproducible ZIP replay.
 - Add synthetic Python examples and method documentation.
+- Make reproducible ZIP member paths portable and decode subprocess/Git text as
+  UTF-8 across Windows, macOS and Linux.

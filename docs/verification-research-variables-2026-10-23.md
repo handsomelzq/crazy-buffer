@@ -13,6 +13,7 @@
 | `uv build --offline` | wheel 与 sdist 构建成功 |
 | 构建内容检查 | 包含三个新模块；没有 `.cache`、`.venv` 或 `__pycache__` |
 | 源码静态编译 | 通过；首次仅因系统 Python 缓存目录权限失败，改用项目内缓存后成功 |
+| GitHub Actions 首次运行 | macOS/Linux 通过；Windows 暴露 ZIP 反斜杠路径与非 UTF-8 文本解码，已修复并重跑 |
 
 ## 浏览器检查
 

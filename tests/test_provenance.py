@@ -7,7 +7,7 @@ from crazy_buffer.provenance import runtime_versions
 def test_partial_and_actual_steps(tmp_path):
     report = RunReport(); report.add_step('external_claim', {'filter': 'user described'}, {})
     path = export_run(pd.DataFrame({'id': ['01']}), tmp_path/'run', report=report)
-    manifest = json.loads((path/'run_manifest.json').read_text())
+    manifest = json.loads((path/'run_manifest.json').read_text(encoding='utf-8'))
     assert manifest['reproducibility'] == 'partial'
     assert set(manifest['missing_artifacts']) == {'inputs', 'script'}
     assert manifest['steps'] == report.steps

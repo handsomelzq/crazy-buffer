@@ -15,7 +15,7 @@ def test_export_complete(tmp_path, metric_points):
                      spatial=metric_points, input_files={'source': source},
                      input_frames={'points': metric_points}, script_path=script,
                      metadata={'units': 'user claim'})
-    manifest = json.loads((out / 'run_manifest.json').read_text())
+    manifest = json.loads((out / 'run_manifest.json').read_text(encoding='utf-8'))
     assert manifest['reproducibility'] == 'complete'
     assert manifest['metadata']['verification'] == 'unverified_user_supplied'
     assert 'run_manifest.json' not in manifest['outputs']
@@ -46,10 +46,10 @@ def test_copy_failure_and_reserved_fid(tmp_path, metric_points, monkeypatch):
 
 
 def test_strict_json_and_lock(tmp_path):
-    lock = tmp_path / '.run.lock'; lock.write_text('competitor')
+    lock = tmp_path / '.run.lock'; lock.write_text('competitor', encoding='utf-8')
     with pytest.raises(FileExistsError):
         export_run(pd.DataFrame(), tmp_path/'run', report=RunReport())
-    assert lock.read_text() == 'competitor'
+    assert lock.read_text(encoding='utf-8') == 'competitor'
     lock.unlink()
     with pytest.raises(ValueError):
         export_run(pd.DataFrame(), tmp_path/'run', report=RunReport(issues=[{'x': float('nan')}]))
@@ -76,7 +76,7 @@ def test_concurrent_export_and_hashes(tmp_path, monkeypatch):
         finally:
             release.set()
         out = first.result(timeout=5)
-    manifest = json.loads((out/'run_manifest.json').read_text())
+    manifest = json.loads((out/'run_manifest.json').read_text(encoding='utf-8'))
     for relative, detail in manifest['outputs'].items():
         assert hashlib.sha256((out/relative).read_bytes()).hexdigest() == detail['sha256']
     assert list(tmp_path.iterdir()) == [out]
@@ -86,7 +86,7 @@ def test_custom_geometry_column_schema(tmp_path, metric_points):
     points = metric_points.rename_geometry('location')
     out = export_run(pd.DataFrame({'id':['001']}), tmp_path/'run', report=RunReport(),
                      input_frames={'points':points}, spatial=points)
-    manifest = json.loads((out/'run_manifest.json').read_text())
+    manifest = json.loads((out/'run_manifest.json').read_text(encoding='utf-8'))
     entry = manifest['inputs'][0]
     assert entry['geometry_column'] == 'location'
     assert entry['column_dtypes']['id'] == 'object'

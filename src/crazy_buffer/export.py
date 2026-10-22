@@ -129,9 +129,16 @@ def export_run(results, output_dir, *, report, spatial=None, input_files=None,
             shutil.copy2(source, target)
             if _hash(source) != before or _hash(target) != before:
                 raise OSError('Script changed during copy or copied hash differs')
-            script = {'path': str(target.relative_to(staging)), 'sha256': before, 'verification': 'copied_not_executed'}
+            script = {
+                'path': target.relative_to(staging).as_posix(),
+                'sha256': before,
+                'verification': 'copied_not_executed',
+            }
         missing = ([] if inputs else ['inputs']) + ([] if script else ['script'])
-        outputs = {str(p.relative_to(staging)): {'sha256': _hash(p)} for p in sorted(staging.rglob('*')) if p.is_file()}
+        outputs = {
+            p.relative_to(staging).as_posix(): {'sha256': _hash(p)}
+            for p in sorted(staging.rglob('*')) if p.is_file()
+        }
         outputs['results.csv']['column_dtypes'] = {str(c): str(t) for c, t in results.dtypes.items()}
         manifest = {'schema_version': 1, 'status': 'success',
                     'reproducibility': 'partial' if missing else 'complete',

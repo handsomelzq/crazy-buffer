@@ -233,7 +233,7 @@ def freeze_run(inputs, params):
         with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
             for path in sorted(exported.rglob('*')):
                 if path.is_file():
-                    archive.write(path, str(path.relative_to(exported)))
+                    archive.write(path, path.relative_to(exported).as_posix())
             archive.writestr('replay.py', REPLAY)
     if output.tell() > 60 * 1024 * 1024:
         raise ValueError('重放包超过 60 MB，请缩小输入。')

@@ -53,7 +53,8 @@ def source_revision():
             environment.pop(key)
     environment['GIT_OPTIONAL_LOCKS'] = '0'
     kwargs = dict(cwd=Path(__file__).resolve().parent, capture_output=True,
-                  text=True, timeout=5, check=True, env=environment)
+                  text=True, encoding='utf-8', errors='replace',
+                  timeout=5, check=True, env=environment)
     try:
         root = Path(subprocess.run(['git', 'rev-parse', '--show-toplevel'], **kwargs).stdout.strip()).resolve()
         source = Path(__file__).resolve()
